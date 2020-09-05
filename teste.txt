@@ -1,0 +1,17 @@
+panel alunosA;
+panel alunosB;
+alunosA = {
+    "Notas": [10, 10, 9.5, 6, 8],
+    "Alunos": ["Gabriel", "Joao", "Renato", "Alfredo", "Maria"],
+    "Faltas": [2, 4, 6, 8, 10]
+}
+alunosB = {
+    "Notas": [7, 8, 9.5],
+    "Alunos": ["Moutinho", "Nicholas", "Marcos"],
+    "Faltas": [2, 4, 10]
+}
+alunosA.deleteRow[3];
+for rows["notas"] (cell;alunosA) {
+    cell = cell - 1
+}
+print(alunosA + alunosB);
