@@ -1,0 +1,11 @@
+/* Aqui o programa deve reclamar sobre a falta da chave final */
+
+int main(int args) {
+    float x
+    int i;
+    i = 10;
+    if (x > 10) {
+        x = x / 10;
+    } else {
+        x = x - 20;
+    }

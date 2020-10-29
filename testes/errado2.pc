@@ -1,0 +1,15 @@
+/* Aqui o programa deve reclamar sobre a falta de um ID no laço da tabela */
+
+int main() {
+    int x;
+    int i;
+    i = 10;
+    if (x > 10) {
+        for (i = 0; i < 10; i = i + 1) {
+            for rows["teste"] (; table) {
+                int j;
+                j = 120;
+            }
+        }
+    }
+}
