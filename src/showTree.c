@@ -102,9 +102,9 @@ void print_call(Call *root, int tabs) {
 void print_factor(Factor *root, int tabs) {
     tabPrinter(tabs);
     printf("<term>");
-    if (root->expr != NULL) {
+    if (root->exprOp != NULL) {
         printf("\n");
-        print_expr(root->expr, tabs+1);
+        print_exprOp(root->exprOp, tabs+1);
     }
     if (root->variable) {
         printf("\n");
@@ -223,7 +223,9 @@ void print_listTable(ListTable *root, int tabs) {
 void print_table(Table *root, int tabs) {
     tabPrinter(tabs);
     printf("<table>");
-    printf(" ID: %s\n", root->id);
+    if (root->variable) {
+        print_variable(root->variable, tabs+1);
+    }
     if (root->list_table != NULL) {
         print_listTable(root->list_table, tabs+1);
     }

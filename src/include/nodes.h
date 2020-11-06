@@ -149,7 +149,7 @@ typedef struct Term {
 } Term;
 
 typedef struct Factor {
-    struct Expr *expr;
+    struct ExprOp *exprOp;
     struct Variable *variable;
     struct Call *call;
     int i_val;
@@ -173,7 +173,7 @@ typedef struct Args {
 } Args;
 
 typedef struct Table {
-    char id[50];
+    struct Variable* variable;
     struct ListTable *list_table;
 } Table;
 
@@ -229,7 +229,7 @@ ExprOp *newExprOpNode (ExprOp *expr_op, Term *term);
 
 Term *newTermNode (Term *term, Factor *factor);
 
-Factor *newFactorNode (Expr *expr, Variable *variable, Call *call, int i_val, float f_val, int tag);
+Factor *newFactorNode (ExprOp *exprOp, Variable *variable, Call *call, int i_val, float f_val, int tag);
 
 Call *newCallNode (Args *args, char * id);
 
@@ -239,7 +239,7 @@ Args *newArgsNode (ArgsList *args_list);
 
 ListTable *newListTableNode (FactorList *factor_list, ListTable *list_table0, ListTable *list_table1);
 
-Table *newTableNode (char *id, ListTable *list_table);
+Table *newTableNode (Variable *variable, ListTable *list_table);
 
 FactorList *newFactorListNode (Factor *factor0, Factor *factor1);
 

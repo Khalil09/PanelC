@@ -5,6 +5,6 @@
 make
 ```
 ```{sh}
-./all <testes/correto1.pc>
+./bin/panelc <testes/correto1.pc>
 ```
 A extensão "pc" refere-se a um arquivo na lingugagem PanelC. Não há problemas em trocar por "txt".

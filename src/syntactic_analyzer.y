@@ -105,16 +105,17 @@ StoreVariables *variable_list = NULL;
 %type <_list_table> list-table
 %type <_factor_list> factor-list
 
-%left OP CMDOP COL
+%left CMDOP OP COL
 
 %start program
 
 %%
 
 program: decl-list { $$ = newProgramNode($1); 
-                     print_declList($1, 0); 
-                     print_symbol_table(); 
-                     free_symbol_table();} ;
+                     print_declList($1, 0);
+                     print_symbol_table();
+                     free_symbol_table();
+                     free_stack();};
 
 decl-list: decl-list decl { $$ = newDeclListNode($1, $2); }
            | decl { $$ = newDeclListNode(NULL, $1); };
@@ -122,11 +123,11 @@ decl-list: decl-list decl { $$ = newDeclListNode($1, $2); }
 decl: decl-var SEMI_COL { $$ = newDeclNode($1,NULL); }
       | function { $$ = newDeclNode(NULL, $1); };
 
-decl-var: TIPO ID SEMI_COL { $$ = newDeclVarNode($1, $2, -1); add_symbol($2, $1, 'V', scope_top()); }
-          | TIPO ID LC INT RC SEMI_COL { $$ = newDeclVarNode($1, $2, $4); add_symbol($2, $1, 'A', scope_top()); };
+decl-var: TIPO ID SEMI_COL { $$ = newDeclVarNode($1, $2, -1); add_store_variable($2, $1, 'V'); }
+          | TIPO ID LC INT RC SEMI_COL { $$ = newDeclVarNode($1, $2, $4); add_store_variable($2, $1, 'A'); };
 
-function: TIPO ID LP params RP compound-stmt { scope_push($2); printf("Function %s\n", $2);
-                                               $$ = newFunctionNode($2, $1, $4, $6); add_symbol($2, $1, 'F', scope_top()); };
+function: TIPO ID LP params RP compound-stmt { scope_push($2); transfer_to_symbol_table();
+                                               $$ = newFunctionNode($2, $1, $4, $6); add_store_variable($2, $1, 'F'); };
 
 params: params-list { $$ = newParamsNode($1); }
         | {$$ = NULL;};
@@ -134,13 +135,14 @@ params: params-list { $$ = newParamsNode($1); }
 params-list: params-list COL param { $$ = newParamsListNode($1, $3); }
              | param { $$ = newParamsListNode(NULL, $1); };
 
-param: TIPO ID { $$ = newParamNode($1, $2, 0); add_symbol($2, $1, 'P', scope_top()); } 
-       | TIPO ID LC RC { $$ = newParamNode($1, $2, 1); add_symbol($2, $1, 'P', scope_top()); }; 
+param: TIPO ID { $$ = newParamNode($1, $2, 0); add_store_variable($2, $1, 'P'); } 
+       | TIPO ID LC RC { $$ = newParamNode($1, $2, 1); add_store_variable($2, $1, 'P'); }; 
 
 local-decl: local-decl decl-var { $$ = newLocalDeclNode($1, $2); }
             | {$$ = NULL;};
 
 compound-stmt: LCH local-decl stmt-list RCH { $$ = newCompoundStmtNode($2, $3); };
+               | error RCH { $$ = NULL; };
 
 stmt-list: stmt-list stmt { $$ = newStmtListNode($1, $2); }
            | {$$ = NULL;};
@@ -179,7 +181,7 @@ expr-op: expr-op OP term { $$ = newExprOpNode($1, $3); }
 term: term OP factor { $$ = newTermNode($1, $3); }
       | factor { $$ = newTermNode(NULL, $1); };
 
-factor: LP expr RP { $$ = newFactorNode($2, NULL, NULL, 0, 0, 0); }
+factor: LP expr-op RP { $$ = newFactorNode($2, NULL, NULL, 0, 0, 0); }
         | variable { $$ = newFactorNode(NULL, $1, NULL, 0, 0, 0); }
         | call { $$ = newFactorNode(NULL, NULL, $1, 0, 0, 0); }
         | INT { $$ = newFactorNode(NULL, NULL, NULL, $1, 0, 1); }
@@ -190,10 +192,10 @@ call: ID LP args RP { $$ = newCallNode($3, $1); };
 args: args-list { $$ = newArgsNode($1); }
       | {$$ = NULL;};
 
-args-list: args-list COL args  { $$ = newArgsListNode($1, $3, NULL); }
+args-list: args-list COL simple-expr  { $$ = newArgsListNode($1, NULL, $3); }
            | simple-expr  { $$ = newArgsListNode(NULL, NULL, $1); };
 
-table: ID ATRIB LCH list-table RCH SEMI_COL { $$ = newTableNode($1, $4); };
+table: variable ATRIB LCH list-table RCH SEMI_COL { $$ = newTableNode($1, $4); };
 
 list-table: STR_VAL DOUBLEDOT LC factor-list RC { $$ = newListTableNode($4, NULL, NULL); }
             | list-table COL list-table { $$ = newListTableNode(NULL, $1, $3); } 
@@ -205,19 +207,35 @@ factor-list: factor COL factor { $$ = newFactorListNode($1, $3); }
 
 %%
 
+void transfer_to_symbol_table(){
+    StoreVariables *tmp, *elt;
+    DL_FOREACH_SAFE(variable_list, elt, tmp) {
+        add_symbol(elt->name, elt->type, elt->symbol_type, scope_top());
+        DL_DELETE(variable_list, elt);
+        free(elt);
+    }
+}
+
 void add_store_variable(char *name, char* type, char symbol_type) {
     StoreVariables * s;
     s = create_variable(name, type, symbol_type);
-    DL_APPEND(head, name);
+    DL_APPEND(variable_list, s);
 } 
 
 StoreVariables* create_variable(char *name, char* type, char symbol_type) {
     StoreVariables *s = (StoreVariables *)malloc(sizeof *s);
-    strcpy(s->name, name);
-    strcpy(s->type, type);
-    strcpy(s->symbol_type, type);
-    
+    s->name = strdup(name);
+    s->type = strdup(type);
+    s->symbol_type = symbol_type;    
     return s;
+}
+
+void free_stack() {
+    while(STACK_EMPTY(stack)){
+        ScopeStack *s;
+        STACK_POP(stack, s);
+        free(s);
+    }
 }
 
 ScopeStack *create_scope(char *name) {
@@ -234,8 +252,6 @@ void scope_push(char* scope) {
 
 char* scope_top() {
     ScopeStack *s = STACK_TOP(stack);
-    char * debug = "NULO";
-    if(STACK_EMPTY(stack)) { return debug; }
     return s->name;
 }
 
@@ -270,11 +286,12 @@ SymbolTable* create_symbol(char* key, char *name, char* type, char symbol_type, 
 }
 
 void print_symbol_table() {
-    SymbolTable *s;
-    printf("\n\n-------------------------------  Symbol Table -----------------------------\n\n");
+    SymbolTable *s = NULL;
+    printf("\n\n------------------------------- BEGIN Symbol Table -----------------------------\n\n");
     for(s=symbol_table; s != NULL; s=s->hh.next) {
         printf("key: %20s | name: %20s | type: %20s | symbol_type: %c | scope: %s\n", s->key, s->name, s->type, s->symbol_type, s->scope);
     }
+    printf("\n-------------------------------  END Symbol Table -----------------------------\n\n");
 }
 
 void free_symbol_table(){
@@ -286,7 +303,7 @@ void free_symbol_table(){
 }
 
 int main(int argc, char **argv) {
-    scope_push("global");
+    // scope_push("global");
     ++argv, --argc;
     if(argc > 0)
         yyin = fopen( argv[0], "r" );

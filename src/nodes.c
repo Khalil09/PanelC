@@ -4,6 +4,7 @@
 #include <string.h>
 
 Program * newProgramNode (DeclList * decl_list);
+
 DeclList * newDeclListNode (DeclList * decl_list, Decl * decl);
 
 Decl * newDeclNode (DeclVar * decl_var, Function *function);
@@ -44,7 +45,7 @@ ExprOp *newExprOpNode (ExprOp *expr_op, Term *term);
 
 Term *newTermNode (Term *term, Factor *factor);
 
-Factor *newFactorNode (Expr *expr, Variable *variable, Call *call, int i_val, float f_val, int tag);
+Factor *newFactorNode (ExprOp *exprOp, Variable *variable, Call *call, int i_val, float f_val, int tag);
 
 Call *newCallNode (Args *args, char * id);
 
@@ -54,7 +55,7 @@ Args *newArgsNode (ArgsList *args_list);
 
 ListTable *newListTableNode (FactorList *factor_list, ListTable *list_table0, ListTable *list_table1);
 
-Table *newTableNode (char *id, ListTable *list_table);
+Table *newTableNode (Variable *variable, ListTable *list_table);
 
 FactorList *newFactorListNode (Factor *factor0, Factor *factor1);
 
@@ -238,9 +239,9 @@ Term *newTermNode (Term *term, Factor *factor) {
     return node;
 }
 
-Factor *newFactorNode (Expr *expr, Variable *variable, Call *call, int i_val, float f_val, int tag) {
+Factor *newFactorNode (ExprOp *exprOp, Variable *variable, Call *call, int i_val, float f_val, int tag) {
     Factor *node = malloc(sizeof(Factor));
-    node->expr = expr;
+    node->exprOp = exprOp;
     node->variable = variable;
     node->call = call;
     node->tag = tag;
@@ -283,9 +284,9 @@ ListTable *newListTableNode (FactorList *factor_list, ListTable *list_table0, Li
     return node;
 }
 
-Table *newTableNode (char *id, ListTable *list_table) {
+Table *newTableNode (Variable *variable, ListTable *list_table) {
     Table *node = malloc(sizeof(Table));
-    strcpy(node->id, id);
+    node->variable = variable;
     node->list_table = list_table;
     
     return node;

@@ -1150,12 +1150,12 @@ YY_RULE_SETUP
 {
     current_col += yyleng;
     ERRORS_COUNT++;
-    printf("------ERROR %d--------\n", error_cnt+1);
+    printf("-------Lex Error %d-------\n", error_cnt+1);
     printf("Simbolo: %s\n", yytext);
     printf("%s\n", "Symbol does not belong to the grammar");
     printf("Line: %d\n", current_line);
     printf("Column: %d\n", current_col);
-    printf("----------------------\n");
+    printf("--------------------------\n");
     error_cnt++;
 }
 	YY_BREAK
@@ -2142,5 +2142,7 @@ void yyfree (void * ptr )
 
 
 void yyerror(const char *s) {
+  printf("=========Syntax Error========\n");
   fprintf(stderr, "%d: %s\n", yylineno, s);
+  printf("=============================\n");
 }

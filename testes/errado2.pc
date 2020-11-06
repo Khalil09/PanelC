@@ -1,5 +1,6 @@
 /* Aqui o programa deve reclamar sobre a falta de um ID no laço da tabela */
 
+&
 int main() {
     int x;
     int i;
